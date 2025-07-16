@@ -2,25 +2,25 @@
 "use client";
 
 import { useTransition } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "../../components/ui/button";
 import {
   DialogHeader,
   DialogTitle,
   DialogDescription,
   DialogFooter,
   DialogClose,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Label } from "../../components/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import type { User } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
+} from "../../components/ui/select";
+import type { User } from "../../lib/types";
+import { useToast } from "../../app/hooks/use-toast";
 
 export function UserForm({ user, closeDialog }: { user?: User, closeDialog: () => void }) {
     const { toast } = useToast();
@@ -56,7 +56,7 @@ export function UserForm({ user, closeDialog }: { user?: User, closeDialog: () =
               </div>
               <div className="grid grid-cols-4 items-center gap-4">
                   <Label htmlFor="email" className="text-right">Email</Label>
-                  <Input id="email" name="email" type="email" className="col-span-3" placeholder="user@example.com" defaultValue={user?.email} required />
+                  <Input id="email" name="email" type="email" className="col-span-3" placeholder="user../..example.com" defaultValue={user?.email} required />
               </div>
               {!user && (
                 <div className="grid grid-cols-4 items-center gap-4">

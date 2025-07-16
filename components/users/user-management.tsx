@@ -2,8 +2,8 @@
 "use client";
 
 import { useState, useTransition, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { CardContent } from "@/components/ui/card";
+import { Button } from "../../components/ui/button";
+import { CardContent } from "../../components/ui/card";
 import {
   Table,
   TableBody,
@@ -11,17 +11,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+} from "../../components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { Badge } from "../../components/ui/badge";
 import {
   Dialog,
   DialogContent,
-} from "@/components/ui/dialog";
+} from "../../components/ui/dialog";
 import { Edit, MoreHorizontal, PlusCircle, Trash2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import type { User } from "@/lib/types";
-import { useToast } from "@/hooks/use-toast";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import type { User } from "../../lib/types";
+import { useToast } from "../../app/hooks/use-toast";
 import { UserForm } from "./user-form";
 
 export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
@@ -116,7 +116,7 @@ export function UserManagement({ initialUsers }: { initialUsers: User[] }) {
                             <DropdownMenuItem 
                                 className="text-destructive focus:text-destructive-foreground focus:bg-destructive"
                                 onClick={() => handleDelete(user.id)}
-                                disabled={user.email === 'admin@admin.com'}
+                                disabled={user.email === 'admin../..admin.com'}
                             >
                                 <Trash2 className="mr-2 h-4 w-4" />
                                 Delete
