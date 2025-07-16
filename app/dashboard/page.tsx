@@ -1,89 +1,74 @@
-'use client';
 
-import { useEffect, useState } from 'react';
-import Link from 'next/link';
+import { StatsCard } from "../../components/dashboard/stats-card";
+import { ResourceCharts } from "../../components/dashboard/resource-charts";
+import { ActivityFeed } from "../../components/dashboard/activity-feed";
+import { HardDrive, Cpu, Users, ArrowRight, PlusCircle, Server } from "lucide-react";
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from "../../components/ui/card";
+import Link from "next/link";
+import { Button } from "../../components/ui/button";
+import { servers, users } from "../../lib/server-data";
 
 export default function DashboardPage() {
-  const [servers, setServers] = useState([]);
-  const [name, setName] = useState('');
-  const [loading, setLoading] = useState(false);
-
-  useEffect(() => {
-    fetch('/api/servers')
-      .then((res) => res.json())
-      .then((data) => setServers(data));
-  }, []);
-
-  const handleCreateServer = async () => {
-    setLoading(true);
-    const res = await fetch('/api/servers', {
-      method: 'POST',
-      body: JSON.stringify({ name }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-
-    if (res.ok) {
-      const newServer = await res.json();
-      setServers((prev) => [...prev, newServer]);
-      setName('');
-    }
-    setLoading(false);
-  };
-
-  const handleStartServer = async (serverId: string) => {
-    await fetch('/api/docker/start', {
-      method: 'POST',
-      body: JSON.stringify({ serverId }),
-      headers: { 'Content-Type': 'application/json' },
-    });
-  };
+  const onlineServers = servers.filter(s => s.status === "Online").length;
+  const serverStatus = onlineServers > 0 ? "Online" : "Offline";
+  const totalPlayers = servers.reduce((acc, server) => acc + server.players.current, 0);
+  const maxPlayers = servers.reduce((acc, server) => acc + server.players.max, 0);
 
   return (
-    <main className="p-6 max-w-3xl mx-auto">
-      <h1 className="text-3xl font-bold mb-4">🎮 Your Servers</h1>
-
-      <div className="flex gap-2 mb-4">
-        <input
-          className="border p-2 rounded w-full"
-          placeholder="New server name"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
+    <div className="flex flex-col gap-8">
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+        <StatsCard
+          title="Server Status"
+          value={serverStatus}
+          icon={<HardDrive className="h-5 w-5 text-muted-foreground" />}
+          change={`${onlineServers} of ${servers.length} servers online`}
+          changeColor={serverStatus === "Online" ? "text-green-500" : ""}
         />
-        <button
-          onClick={handleCreateServer}
-          disabled={loading}
-          className="bg-blue-600 text-white px-3 py-1 rounded"
-        >
-          {loading ? 'Creating...' : 'Create Server'}
-        </button>
+        <StatsCard
+          title="Active Players"
+          value={`${totalPlayers} / ${maxPlayers}`}
+          icon={<Users className="h-5 w-5 text-muted-foreground" />}
+          change="Across all servers"
+        />
+        <StatsCard
+          title="Total Servers"
+          value={servers.length.toString()}
+          icon={<Server className="h-5 w-5 text-muted-foreground" />}
+          change="Configured servers"
+        />
+        <StatsCard
+          title="Total Users"
+          value={users.length.toString()}
+          icon={<Users className="h-5 w-5 text-muted-foreground" />}
+          change="Registered accounts"
+        />
       </div>
-
-      {servers.length === 0 ? (
-        <p>No servers yet.</p>
-      ) : (
-        <ul className="space-y-2">
-          {servers.map((server: any) => (
-            <li key={server.id} className="border p-4 rounded shadow">
-              <div className="font-semibold">{server.name}</div>
-              <div className="text-sm text-gray-500">ID: {server.id}</div>
-              <div className="flex items-center gap-3 mt-2">
-                <Link
-                  className="text-blue-500 underline"
-                  href={`/dashboard/server/${server.id}`}
-                >
-                  Manage
-                </Link>
-                <button
-                  onClick={() => handleStartServer(server.id)}
-                  className="bg-green-600 text-white px-3 py-1 rounded"
-                >
-                  ▶️ Start
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
-    </main>
+      <div className="grid gap-8 lg:grid-cols-3">
+        <div className="lg:col-span-2 flex flex-col gap-8">
+          <ResourceCharts />
+          <Card>
+            <CardHeader>
+                <CardTitle>Quick Actions</CardTitle>
+                <CardDescription>Get to where you need to go, faster.</CardDescription>
+            </CardHeader>
+            <CardContent className="flex flex-col sm:flex-row gap-4">
+                <Button asChild className="w-full sm:w-auto">
+                    <Link href="/dashboard/panel">
+                        Go to Control Panel <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full sm:w-auto">
+                    <Link href="/dashboard/panel">
+                        <PlusCircle className="mr-2 h-4 w-4" /> Create New Server
+                    </Link>
+                </Button>
+            </CardContent>
+          </Card>
+        </div>
+        <div className="lg:col-span-1">
+          <ActivityFeed />
+        </div>
+      </div>
+    </div>
   );
 }

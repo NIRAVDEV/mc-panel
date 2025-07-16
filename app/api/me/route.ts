@@ -1,8 +1,8 @@
 import { cookies } from 'next/headers';
-import { getUserFromToken } from '@/lib/auth';
+import { getUserFromToken } from '../../../lib/auth';
 
 export async function GET() {
-  const token = cookies().get('token')?.value;
+  const token = (await cookies()).get('token')?.value;
   const user = token ? getUserFromToken(token) : null;
 
   if (!user) {

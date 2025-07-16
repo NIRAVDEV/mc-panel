@@ -1,7 +1,7 @@
 import { cookies } from 'next/headers';
 
 export async function POST() {
-  cookies().set('token', '', {
+  (await cookies()).set('token', '', {
     httpOnly: true,
     maxAge: 0,
   });

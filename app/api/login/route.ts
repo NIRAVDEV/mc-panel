@@ -1,25 +1,20 @@
-import { NextResponse } from 'next/server';
 import prisma from '../../../lib/prisma';
 import bcrypt from 'bcryptjs';
-import { sign } from 'jose';
+import { sign } from 'jsonwebtoken';
 import { cookies } from 'next/headers';
 
 export async function POST(req: Request) {
   const { email, password } = await req.json();
   const user = await prisma.user.findUnique({ where: { email } });
 
-  if (!user || !bcrypt.compareSync(password, user.password)) {
-    return NextResponse.json({ error: 'Invalid credentials' }, { status: 401 });
-  }
+  if (!user) return new Response('User not found', { status: 401 });
 
-  const token = sign({ id: user.id, email: user.email }, process.env.JWT_SECRET!, { expiresIn: '1d' });
+  const valid = await bcrypt.compare(password, user.password);
+  if (!valid) return new Response('Invalid password', { status: 401 });
 
-  cookies().set('token', token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production',
-    path: '/',
-    maxAge: 60 * 60 * 24,
-  });
+  const token = sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: '1d' });
 
-  return NextResponse.json({ message: 'Logged in' });
+  (await cookies()).set('token', token, { httpOnly: true, path: '/' });
+
+  return Response.json({ success: true });
 }

@@ -48,9 +48,10 @@ model Subuser {
 }
 
 model Node {
-  id        String   @id @default(uuid())
-  name      String
-  ip        String
-  token     String   @unique
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  name        String
+  token       String   @unique
+  ip          String
+  port        Int
+  createdAt   DateTime @default(now())
 }
