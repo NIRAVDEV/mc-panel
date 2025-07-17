@@ -1,159 +1,112 @@
-
 "use client";
 
-import { useState, useTransition, useEffect } from "react";
-import Link from "next/link";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "../../components/ui/button";
-import { CardContent } from "../../components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "../../components/ui/table";
-import {
-  Dialog,
-  DialogContent,
-} from "../../components/ui/dialog";
-import { Edit, MoreHorizontal, PlusCircle, RefreshCw, Trash2 } from "lucide-react";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "../../components/ui/dropdown-menu";
+import { Dialog, DialogContent } from "../../components/ui/dialog";
+import { Input } from "../../components/ui/input";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
+import { Trash2, PlusCircle } from "lucide-react";
 import { useToast } from "../../app/hooks/use-toast";
-import { Badge } from "../../components/ui/badge";
-import type { Node } from "../../lib/types";
-import { NodeForm } from "./node-form";
 
-export function NodeManagement({ initialNodes }: { initialNodes: Node[] }) {
-  const [nodes, setNodes] = useState<Node[]>(initialNodes);
-  const [isDialogOpen, setDialogOpen] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<Node | undefined>(undefined);
-  
+type Node = {
+  id: string;
+  name: string;
+  ipAddress: string;
+  location?: string;
+};
+
+export function NodeManagement() {
+  const [nodes, setNodes] = useState<Node[]>([]);
+  const [open, setOpen] = useState(false);
   const [isPending, startTransition] = useTransition();
-
   const { toast } = useToast();
 
+  const [form, setForm] = useState({ name: "", ipAddress: "", location: "" });
+
   useEffect(() => {
-    setNodes(initialNodes);
-  }, [initialNodes]);
-  
-  const handleOpenDialog = (node?: Node) => {
-    setSelectedNode(node);
-    setDialogOpen(true);
-  }
-  
-  const handleCheckStatus = (node: Node) => {
-    startTransition(async () => {
-        // Mock status check
-        console.log(`Checking status for node ${node.id}`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        const newStatus = Math.random() > 0.5 ? 'Online' : 'Offline';
-        setNodes(nodes.map(n => n.id === node.id ? {...n, status: newStatus} : n));
-        toast({
-            title: `Node is now ${newStatus}`,
-            description: `Status for node "${node.name}" has been updated. (Mock)`,
-        });
+    fetch("/api/nodes")
+      .then(res => res.json())
+      .then(setNodes);
+  }, []);
+
+  const handleAdd = async () => {
+    const res = await fetch("/api/nodes", {
+      method: "POST",
+      body: JSON.stringify(form),
     });
+    const newNode = await res.json();
+    setNodes(prev => [newNode, ...prev]);
+    setOpen(false);
+    setForm({ name: "", ipAddress: "", location: "" });
+    toast({ title: "Node Added" });
   };
 
-  const handleDelete = (nodeId: string) => {
-    startTransition(async () => {
-        // Mock delete
-        console.log(`Deleting node ${nodeId}`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-        setNodes(nodes.filter(n => n.id !== nodeId));
-        toast({
-            title: "Node Deleted",
-            description: "The node has been successfully deleted. (Mock)",
-            variant: "destructive"
-        });
-    });
-  }
-
-  const getStatusBadge = (status: Node['status']) => {
-    if (status === 'Online') {
-      return <Badge className="bg-green-500 hover:bg-green-600 text-primary-foreground">Online</Badge>;
-    }
-    return <Badge variant="destructive">Offline</Badge>;
+  const handleDelete = async (id: string) => {
+    await fetch(`/api/nodes/${id}`, { method: "DELETE" });
+    setNodes(prev => prev.filter(n => n.id !== id));
+    toast({ title: "Node Deleted", variant: "destructive" });
   };
 
   return (
-    <CardContent>
-      <div className="flex justify-end mb-4">
-        <Button onClick={() => handleOpenDialog()}>
-          <PlusCircle className="mr-2 h-4 w-4" />
-          Create Node
-        </Button>
+    <>
+      <div className="flex justify-between mb-4">
+        <h2 className="text-xl font-semibold">Nodes</h2>
+        <Button onClick={() => setOpen(true)}><PlusCircle className="mr-2 h-4 w-4"/>Add Node</Button>
       </div>
-      
-      <Dialog open={isDialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="sm:max-w-lg">
-          <NodeForm node={selectedNode} closeDialog={() => setDialogOpen(false)} />
+
+      <Dialog open={open} onOpenChange={setOpen}>
+        <DialogContent className="sm:max-w-md">
+          <h3 className="text-lg font-medium mb-2">Add Node</h3>
+          <Input
+            placeholder="Node Name"
+            value={form.name}
+            onChange={e => setForm({ ...form, name: e.target.value })}
+            className="mb-2"
+          />
+          <Input
+            placeholder="IP Address"
+            value={form.ipAddress}
+            onChange={e => setForm({ ...form, ipAddress: e.target.value })}
+            className="mb-2"
+          />
+          <Input
+            placeholder="Location"
+            value={form.location}
+            onChange={e => setForm({ ...form, location: e.target.value })}
+            className="mb-2"
+          />
+          <Button onClick={handleAdd}>Add Node</Button>
         </DialogContent>
       </Dialog>
-      
-      <div className="rounded-md border w-full overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Node Name</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Location</TableHead>
-              <TableHead>Servers</TableHead>
-              <TableHead>Allocation</TableHead>
-              <TableHead><span className="sr-only">Actions</span></TableHead>
+
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead>Name</TableHead>
+            <TableHead>IP</TableHead>
+            <TableHead>Location</TableHead>
+            <TableHead className="text-right">Actions</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {nodes.map(node => (
+            <TableRow key={node.id}>
+              <TableCell>{node.name}</TableCell>
+              <TableCell>{node.ipAddress}</TableCell>
+              <TableCell>{node.location || "-"}</TableCell>
+              <TableCell className="text-right">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => handleDelete(node.id)}
+                >
+                  <Trash2 className="h-4 w-4 text-red-500" />
+                </Button>
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {nodes.length > 0 ? nodes.map((node) => (
-              <TableRow key={node.id} className={isPending ? 'opacity-50' : ''}>
-                <TableCell>
-                  <Link href={`/dashboard/nodes/${node.id}`} className="font-medium hover:underline flex items-center gap-2">
-                    {node.name} <Badge variant="outline">{node.os}</Badge>
-                  </Link>
-                  <div className="text-sm text-muted-foreground">{node.fqdn}</div>
-                </TableCell>
-                <TableCell>{getStatusBadge(node.status)}</TableCell>
-                <TableCell>{node.location}</TableCell>
-                <TableCell>{node.servers}</TableCell>
-                <TableCell>
-                    <div>{node.memory} GB RAM &bull; {node.disk} GB Disk</div>
-                    <div className="text-sm text-muted-foreground">Ports: {node.ports.start}-{node.ports.end}</div>
-                </TableCell>
-                <TableCell className="text-right">
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon">
-                                <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                            <DropdownMenuItem onClick={() => handleOpenDialog(node)}>
-                                <Edit className="mr-2 h-4 w-4" />
-                                Edit
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCheckStatus(node)}>
-                                <RefreshCw className="mr-2 h-4 w-4" />
-                                Check Status
-                            </DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleDelete(node.id)} className="text-destructive focus:text-destructive-foreground focus:bg-destructive">
-                                <Trash2 className="mr-2 h-4 w-4" />
-                                Delete
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
-                </TableCell>
-              </TableRow>
-            )) : (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  No nodes created yet.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-    </CardContent>
+          ))}
+        </TableBody>
+      </Table>
+    </>
   );
 }

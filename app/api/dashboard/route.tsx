@@ -1,23 +1,30 @@
-'use client';
+import { NextResponse } from "next/server";
+import prisma from "../../../lib/prisma";
 
-import { useEffect, useState } from 'react';
+export async function GET() {
+  try {
+    const servers = await prisma.server.findMany();
+    const serversWithStatus = servers.map(server => ({
+      ...server,
+      status: "Offline", // mock for now
+    }));
+    const users = await prisma.user.findMany();
 
-export default function DashboardPage() {
-  const [loading, setLoading] = useState(true);
-  const [authenticated, setAuthenticated] = useState(false);
+    const totalPlayers = servers.reduce((sum, s) => sum + (s.currentPlayers || 0), 0);
+    const maxPlayers = servers.reduce((sum, s) => sum + (s.maxPlayers || 0), 0);
+    // const onlineServers = servers.filter(s => s.isOnline).length;
+    const onlineServers = serversWithStatus.filter(s => s.status === "Online").length;
 
-  useEffect(() => {
-    fetch('/api/me').then(async res => {
-      setAuthenticated(res.ok);
-      setLoading(false);
+    return NextResponse.json({
+      serverCount: servers.length,
+      onlineServers,
+      totalUsers: users.length,
+      totalPlayers,
+      maxPlayers,
+      serverStatus: onlineServers > 0 ? "Online" : "Offline"
     });
-  }, []);
-
-  if (loading) return <p>Loading...</p>;
-
-  return authenticated ? (
-    <h1 className="text-xl font-bold">Welcome to your dashboard</h1>
-  ) : (
-    <p>You are not logged in.</p>
-  );
+  } catch (err) {
+    console.error("Dashboard API Error:", err);
+    return new NextResponse("Internal Server Error", { status: 500 });
+  }
 }

@@ -1,23 +1,26 @@
-// /app/api/nodes/route.ts
-import { NextResponse } from 'next/server';
-import { sign } from 'jsonwebtoken';
-import prisma from '../../../lib/prisma';
+import prisma from "../../../lib/prisma";
+import { NextResponse } from "next/server";
 
-const SECRET = process.env.NODE_AGENT_SECRET || 'changeme';
+// GET /api/nodes - Fetch all nodes
+export async function GET() {
+  const nodes = await prisma.node.findMany({ orderBy: { createdAt: "desc" } });
+  return NextResponse.json(nodes);
+}
 
+// POST /api/nodes - Add a new node
 export async function POST(req: Request) {
-  const { name, location } = await req.json();
+  const body = await req.json();
+  const { name, ipAddress, location } = body;
 
-  // Save node info to DB
-  const node = await prisma.node.Create({
+  const node = await prisma.node.create({
     data: {
-      name,
-      location,
+      name: name,
+      ipAddress: ipAddress,  // ✅ Matches the schema now
+      location: location`, // ✅ Matches the schema now`,
+      port: 8080, // 👈 Add a default port if you're not passing it in the body
+      token: crypto.randomUUID(), // 👈 Optional: generate a secure token
     },
   });
 
-  // Create signed token
-  const token = sign({ nodeId: node.id }, SECRET, { expiresIn: '7d' });
-
-  return NextResponse.json({ token });
+  return NextResponse.json(node);
 }

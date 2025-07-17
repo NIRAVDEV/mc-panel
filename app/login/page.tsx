@@ -8,20 +8,18 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
+  const handleLogin = async () => {
     const res = await fetch('/api/login', {
       method: 'POST',
-      body: JSON.stringify({ email, password }),
       headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email, password }),
     });
 
     if (res.ok) {
       router.push('/dashboard');
     } else {
-      setError('Invalid email or password');
+      const data = await res.json();
+      setError(data.error || 'Login failed');
     }
   };
 
@@ -57,9 +55,13 @@ export default function LoginPage() {
           <button
             type="submit"
             className="w-full py-2 px-4 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            onClick={handleLogin}
           >
             Login
           </button>
+          {error && (
+            <p className="text-red-500 text-sm mt-2">{error}</p>
+          )}
         </form>
       </div>
     </div>

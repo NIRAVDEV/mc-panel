@@ -9,7 +9,9 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// =========================
 // User table
+// =========================
 model User {
   id        String     @id @default(uuid())
   email     String     @unique
@@ -21,37 +23,50 @@ model User {
   subusers  Subuser[]
 }
 
-// Server table (represents a Minecraft server)
+// =========================
+// Server table (Minecraft servers)
+// =========================
 model Server {
-  id        String     @id @default(uuid())
-  name      String
-  owner     User       @relation("OwnerServers", fields: [ownerId], references: [id])
-  ownerId   String
-  createdAt DateTime   @default(now())
+  id             String     @id @default(uuid())
+  name           String
+  owner          User       @relation("OwnerServers", fields: [ownerId], references: [id])
+  ownerId        String
+  createdAt      DateTime   @default(now())
+  status         String     @default("Offline") // Online, Offline, Starting
+  ram            Int?
+  type           String?
+  version        String?
+  currentPlayers Int?       @default(0)
+  maxPlayers     Int?       @default(0)
 
-  // Relations
-  subusers  Subuser[]
+  subusers       Subuser[]
 }
 
-// Subuser table (permissions for other users on a server)
+// =========================
+// Subuser table (Permissions for other users on a server)
+// =========================
 model Subuser {
-  id         String   @id @default(uuid())
-  server     Server   @relation(fields: [serverId], references: [id])
-  serverId   String
-  user       User     @relation(fields: [userId], references: [id])
-  userId     String
+  id          String   @id @default(uuid())
+  server      Server   @relation(fields: [serverId], references: [id])
+  serverId    String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
 
   // Permissions
-  canStart   Boolean  @default(false)
-  canStop    Boolean  @default(false)
-  canConsole Boolean  @default(false)
+  canStart    Boolean  @default(false)
+  canStop     Boolean  @default(false)
+  canConsole  Boolean  @default(false)
 }
 
+// =========================
+// Node table (agent setup)
+// =========================
 model Node {
   id          String   @id @default(cuid())
   name        String
   token       String   @unique
-  ip          String
+  ipAddress   String
   port        Int
+  location    Int
   createdAt   DateTime @default(now())
 }
