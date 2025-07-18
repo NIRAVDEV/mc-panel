@@ -1,3 +1,4 @@
+h
 # MC Panel
 
 A modern Minecraft control panel built with **Next.js**, **TailwindCSS**, **Prisma**, and **Docker**.
