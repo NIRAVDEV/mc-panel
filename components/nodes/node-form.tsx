@@ -17,23 +17,37 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from ".
 import type { Node } from "../../lib/types";
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group";
 import { Switch } from "../ui/switch";
+import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
+import { Terminal } from "lucide-react";
 
 export function NodeForm({ node, closeDialog }: { node?: Node, closeDialog: () => void }) {
     const { toast } = useToast();
     const [isPending, startTransition] = useTransition();
+    const [error, setError] = useState<string | null>(null);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
+        setError(null);
         const formData = new FormData(event.currentTarget);
+        
         startTransition(async () => {
-            // This is where you would call your backend API
-            console.log("Form submitted", Object.fromEntries(formData));
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            toast({
-                title: node ? "Node Updated" : "Node Created",
-                description: `The node has been successfully ${node ? 'updated' : 'created'}. (Mock)`,
+            const body = Object.fromEntries(formData.entries());
+            const res = await fetch("/api/nodes", {
+                method: "POST",
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(body),
             });
-            closeDialog();
+
+            if (res.ok) {
+                toast({
+                    title: node ? "Node Updated" : "Node Created",
+                    description: `The node has been successfully ${node ? 'updated' : 'created'}.`,
+                });
+                closeDialog();
+            } else {
+                const data = await res.json();
+                setError(data.error || "An unknown error occurred.");
+            }
         });
     };
     
@@ -45,30 +59,37 @@ export function NodeForm({ node, closeDialog }: { node?: Node, closeDialog: () =
                   {node ? "Update the details for this node." : "Configure a new physical node to host servers."}
               </DialogDescription>
             </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="name" className="text-right">Name</Label>
-                <Input id="name" name="name" className="col-span-3" placeholder="e.g., US-West-1" defaultValue={node?.name} required />
+
+            {error && (
+                <Alert variant="destructive" className="my-4">
+                    <Terminal className="h-4 w-4" />
+                    <AlertTitle>Error</AlertTitle>
+                    <AlertDescription>{error}</AlertDescription>
+                </Alert>
+            )}
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 py-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Name</Label>
+                <Input id="name" name="name" placeholder="e.g., US-West-1" defaultValue={node?.name} required />
               </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="os" className="text-right">OS</Label>
+              <div className="space-y-2">
+                <Label htmlFor="location">Location</Label>
+                <Input id="location" name="location" placeholder="e.g., Los Angeles, CA" defaultValue={node?.location} required />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="os">OS</Label>
                 <Select name="os" defaultValue={node?.os || "debian"}>
-                    <SelectTrigger className="col-span-3">
-                        <SelectValue placeholder="Select an OS" />
-                    </SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Select an OS" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="debian">Debian / Ubuntu</SelectItem>
                         <SelectItem value="nixos">NixOS</SelectItem>
                     </SelectContent>
                 </Select>
-                </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="location" className="text-right">Location</Label>
-                <Input id="location" name="location" className="col-span-3" placeholder="e.g., Los Angeles, CA" defaultValue={node?.location} required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                  <Label className="text-right">Visibility</Label>
-                  <RadioGroup name="visibility" defaultValue={node?.visibility || 'Public'} className="col-span-3 flex items-center space-x-4">
+              <div className="space-y-2">
+                  <Label>Visibility</Label>
+                  <RadioGroup name="visibility" defaultValue={node?.visibility || 'Public'} className="flex items-center space-x-4 pt-2">
                     <div className="flex items-center space-x-2">
                         <RadioGroupItem value="Public" id="v-public" />
                         <Label htmlFor="v-public">Public</Label>
@@ -79,33 +100,33 @@ export function NodeForm({ node, closeDialog }: { node?: Node, closeDialog: () =
                     </div>
                   </RadioGroup>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="fqdn" className="text-right">FQDN</Label>
-                <Input id="fqdn" name="fqdn" className="col-span-3" placeholder="e.g., node.example.com or IP" defaultValue={node?.fqdn} required />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="fqdn">FQDN (or IP Address)</Label>
+                <Input id="fqdn" name="fqdn" placeholder="e.g., node.example.com or 192.168.1.100" defaultValue={node?.fqdn} required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="useSSL" className="text-right">Use SSL</Label>
-                <div className="col-span-3">
+               <div className="space-y-2">
+                <Label htmlFor="daemonPort">Daemon Port</Label>
+                <Input id="daemonPort" name="daemonPort" type="number" placeholder="e.g., 8080" defaultValue={node?.daemonPort || 8080} required />
+              </div>
+              <div className="flex flex-col justify-center space-y-2">
+                <Label htmlFor="useSSL">Use SSL</Label>
+                <div className="pt-1">
                     <Switch id="useSSL" name="useSSL" defaultChecked={node?.useSSL ?? true} />
                 </div>
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="daemonPort" className="text-right">Daemon Port</Label>
-                <Input id="daemonPort" name="daemonPort" type="number" className="col-span-3" placeholder="e.g., 8080" defaultValue={node?.daemonPort || 8080} required />
+               <div className="space-y-2">
+                <Label htmlFor="memory">Memory (GB)</Label>
+                <Input id="memory" name="memory" type="number" placeholder="e.g., 64" defaultValue={node?.memory} required />
               </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="memory" className="text-right">Memory (GB)</Label>
-                <Input id="memory" name="memory" type="number" className="col-span-3" placeholder="e.g., 64" defaultValue={node?.memory} required />
+                <div className="space-y-2">
+                <Label htmlFor="disk">Disk (GB)</Label>
+                <Input id="disk" name="disk" type="number" placeholder="e.g., 500" defaultValue={node?.disk} required />
               </div>
-                <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="disk" className="text-right">Disk (GB)</Label>
-                <Input id="disk" name="disk" type="number" className="col-span-3" placeholder="e.g., 500" defaultValue={node?.disk} required />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <Label htmlFor="portsStart" className="text-right">Port Range</Label>
-                <div className="col-span-3 grid grid-cols-2 gap-2">
-                    <Input id="portsStart" name="portsStart" type="number" placeholder="e.g., 25565" defaultValue={node?.ports.start} required />
-                    <Input id="portsEnd" name="portsEnd" type="number" placeholder="e.g., 25575" defaultValue={node?.ports.end} required />
+              <div className="space-y-2 md:col-span-2">
+                <Label htmlFor="portsStart">Port Range</Label>
+                <div className="grid grid-cols-2 gap-2">
+                    <Input id="portsStart" name="portsStart" type="number" placeholder="Start (e.g., 25565)" defaultValue={node?.ports.start} required />
+                    <Input id="portsEnd" name="portsEnd" type="number" placeholder="End (e.g., 25575)" defaultValue={node?.ports.end} required />
                 </div>
               </div>
             </div>
