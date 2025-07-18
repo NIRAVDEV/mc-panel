@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
@@ -9,21 +9,20 @@ import { PlusCircle, Trash2, HardDrive, Cpu, CircleDot } from "lucide-react";
 import { useToast } from "../../app/hooks/use-toast";
 import type { Node } from "../../lib/types";
 import { Badge } from "../ui/badge";
-import { Skeleton } from "../ui/skeleton";
-import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
-import { Terminal } from "lucide-react";
-
 
 interface NodeManagementProps {
-    nodes: Node[];
-    isLoading: boolean;
-    error: string | null;
-    refetch: () => void;
+    initialNodes: Node[];
+    refetch: () => Promise<void>;
 }
 
-export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagementProps) {
+export function NodeManagement({ initialNodes, refetch }: NodeManagementProps) {
+  const [nodes, setNodes] = useState(initialNodes);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
+
+  useEffect(() => {
+    setNodes(initialNodes);
+  }, [initialNodes]);
 
   const handleDelete = (nodeId: string) => {
       startTransition(async () => {
@@ -32,7 +31,7 @@ export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagem
           });
           if (res.ok) {
               toast({ title: "Node Deleted", description: "The node has been successfully removed." });
-              refetch();
+              await refetch();
           } else {
               toast({ title: "Error", description: "Failed to delete the node.", variant: "destructive" });
           }
@@ -74,29 +73,7 @@ export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagem
             </TableRow>
             </TableHeader>
             <TableBody>
-            {isLoading ? (
-                Array.from({ length: 3 }).map((_, i) => (
-                    <TableRow key={i}>
-                        <TableCell><Skeleton className="h-5 w-20 rounded-full" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-32" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-24" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-20" /></TableCell>
-                        <TableCell><Skeleton className="h-5 w-12" /></TableCell>
-                        <TableCell className="text-right"><Skeleton className="h-8 w-8" /></TableCell>
-                    </TableRow>
-                ))
-            ) : error ? (
-                <TableRow>
-                    <TableCell colSpan={7}>
-                        <Alert variant="destructive">
-                            <Terminal className="h-4 w-4" />
-                            <AlertTitle>Failed to Load Nodes</AlertTitle>
-                            <AlertDescription>{error}</AlertDescription>
-                        </Alert>
-                    </TableCell>
-                </TableRow>
-            ) : nodes.length === 0 ? (
+            {nodes.length === 0 ? (
                 <TableRow>
                     <TableCell colSpan={7} className="h-24 text-center">
                         No nodes have been created yet.

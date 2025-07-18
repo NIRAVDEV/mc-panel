@@ -27,6 +27,7 @@ import {
   Server,
   ServerCog,
   Users,
+  Network
 } from "lucide-react";
 import { DashboardHeader } from "../../components/dashboard-header";
 import { notFound } from "next/navigation";
@@ -74,14 +75,14 @@ export default function DashboardLayout({
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
-             <SidebarMenuItem>
+            <SidebarMenuItem>
               <SidebarMenuButton
                 asChild
                 className="font-medium"
               >
-                <Link href="/dashboard/locations">
-                  <MapPin />
-                  Locations
+                <Link href="/dashboard/nodes">
+                  <Network />
+                  Nodes
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
