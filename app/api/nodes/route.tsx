@@ -31,7 +31,7 @@ export async function GET() {
       include: { location: true },
   });
   // In a real app, you would also check the actual status of the daemon
-  const nodesWithStatus = nodes.map(n => ({...n, status: "Online" as "Online" | "Offline", servers: 0, location: n.location?.name || 'N/A' }))
+  const nodesWithStatus = nodes.map(n => ({...n, status: "Online" as "Online" | "Offline", servers: 0, location: n.location?.name ?? 'N/A' }))
   return NextResponse.json(nodesWithStatus);
 }
 
