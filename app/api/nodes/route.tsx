@@ -1,16 +1,19 @@
 
+
 import prisma from "../../../lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const nodeSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  location: z.string().min(1, { message: "Location is required" }),
+  locationId: z.string().min(1, { message: "Location is required" }),
   fqdn: z.string().min(1, { message: "FQDN is required" }),
   os: z.enum(["debian", "nixos"]),
   visibility: z.enum(["Public", "Private"]),
   daemonPort: z.coerce.number().int().positive(),
-  useSSL: z.preprocess((val) => val === 'on' || val === true, z.boolean()),
+  daemonSftpPort: z.coerce.number().int().positive(),
+  useSSL: z.preprocess((val) => val === 'on' || val === 'true' || val === true, z.boolean()),
+  behindProxy: z.preprocess((val) => val === 'on' || val === 'true' || val === true, z.boolean()),
   memory: z.coerce.number().int().positive(),
   disk: z.coerce.number().int().positive(),
   portsStart: z.coerce.number().int().positive(),
@@ -25,10 +28,10 @@ const nodeSchema = z.object({
 export async function GET() {
   const nodes = await prisma.node.findMany({ 
       orderBy: { createdAt: "desc" },
-      // Include server count in the future
+      include: { location: true },
   });
   // In a real app, you would also check the actual status of the daemon
-  const nodesWithStatus = nodes.map(n => ({...n, status: "Online" as "Online" | "Offline", servers: 0}))
+  const nodesWithStatus = nodes.map(n => ({...n, status: "Online" as "Online" | "Offline", servers: 0, location: n.location.name}))
   return NextResponse.json(nodesWithStatus);
 }
 
@@ -42,15 +45,17 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const { name, location, fqdn, daemonPort, useSSL, memory, disk, portsStart, portsEnd, os, visibility } = validation.data;
+    const { name, locationId, fqdn, daemonPort, daemonSftpPort, useSSL, behindProxy, memory, disk, portsStart, portsEnd, os, visibility } = validation.data;
 
     const node = await prisma.node.create({
       data: {
         name,
-        location,
+        locationId,
         fqdn,
         daemonPort,
+        daemonSftpPort,
         useSSL,
+        behindProxy,
         memory,
         disk,
         ports: { start: portsStart, end: portsEnd }, // Stored as JSON

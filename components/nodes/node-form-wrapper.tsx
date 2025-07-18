@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useTransition } from "react";
+import { useState, useTransition, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
@@ -16,11 +16,39 @@ import Link from "next/link";
 import type { Node } from "../../lib/types";
 import { Textarea } from "../ui/textarea";
 
+type Location = {
+    id: string;
+    name: string;
+    shortCode: string;
+}
+
 export function NodeFormWrapper({ node }: { node?: Node }) {
     const { toast } = useToast();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<any>(null);
+    const [locations, setLocations] = useState<Location[]>([]);
+    const [loadingLocations, setLoadingLocations] = useState(true);
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                const res = await fetch("/api/locations");
+                if (!res.ok) throw new Error("Failed to fetch locations");
+                const data = await res.json();
+                setLocations(data);
+            } catch (err) {
+                toast({
+                    title: "Error",
+                    description: "Could not fetch locations.",
+                    variant: "destructive"
+                });
+            } finally {
+                setLoadingLocations(false);
+            }
+        };
+        fetchLocations();
+    }, [toast]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -75,12 +103,21 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
                             <Textarea id="description" name="description" rows={5} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="location">Location</Label>
-                            <Select name="location" defaultValue={node?.location}>
-                                <SelectTrigger><SelectValue placeholder="Select a location" /></SelectTrigger>
+                            <Label htmlFor="locationId">Location</Label>
+                            <Select name="locationId" defaultValue={node?.location}>
+                                <SelectTrigger disabled={loadingLocations}>
+                                    <SelectValue placeholder="Select a location" />
+                                </SelectTrigger>
                                 <SelectContent>
-                                    <SelectItem value="de">Germany</SelectItem>
-                                    <SelectItem value="us">United States</SelectItem>
+                                    {loadingLocations ? (
+                                        <SelectItem value="loading" disabled>Loading locations...</SelectItem>
+                                    ) : locations.length > 0 ? (
+                                        locations.map(loc => (
+                                            <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
+                                        ))
+                                    ) : (
+                                        <SelectItem value="no-locations" disabled>No locations found. Add one on the Locations page.</SelectItem>
+                                    )}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -106,13 +143,13 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
 
                          <div className="space-y-2">
                             <Label>Communicate Over SSL</Label>
-                             <RadioGroup name="ssl_connection" defaultValue={'ssl'} className="flex items-center space-x-4 pt-2">
+                             <RadioGroup name="useSSL" defaultValue={'true'} className="flex items-center space-x-4 pt-2">
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="ssl" id="ssl" />
+                                    <RadioGroupItem value="true" id="ssl" />
                                     <Label htmlFor="ssl">Use SSL Connection</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="http" id="http" />
+                                    <RadioGroupItem value="false" id="http" />
                                     <Label htmlFor="http">Use HTTP Connection</Label>
                                 </div>
                              </RadioGroup>
@@ -120,13 +157,13 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
 
                         <div className="space-y-2">
                             <Label>Behind Proxy</Label>
-                            <RadioGroup name="behind_proxy" defaultValue={'not_behind'} className="flex items-center space-x-4 pt-2">
+                            <RadioGroup name="behindProxy" defaultValue={'false'} className="flex items-center space-x-4 pt-2">
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="not_behind" id="not_behind" />
+                                    <RadioGroupItem value="false" id="not_behind" />
                                     <Label htmlFor="not_behind">Not Behind Proxy</Label>
                                 </div>
                                 <div className="flex items-center space-x-2">
-                                    <RadioGroupItem value="behind" id="behind" />
+                                    <RadioGroupItem value="true" id="behind" />
                                     <Label htmlFor="behind">Behind Proxy</Label>
                                 </div>
                             </RadioGroup>
@@ -170,6 +207,17 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
                          </div>
                          <p className="text-xs text-muted-foreground -mt-2">Enter the total amount of disk space available for new servers. To disable checking for overallocation enter <code className="text-xs">-1</code> into the field.</p>
                         
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                             <div className="space-y-2">
+                                <Label htmlFor="portsStart">Allocation Range Start</Label>
+                                <Input id="portsStart" name="portsStart" type="number" placeholder="e.g., 25565" required />
+                            </div>
+                            <div className="space-y-2">
+                                <Label htmlFor="portsEnd">Allocation Range End</Label>
+                                <Input id="portsEnd" name="portsEnd" type="number" placeholder="e.g., 25600" required />
+                            </div>
+                        </div>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div className="space-y-2">
                                 <Label htmlFor="daemonPort">Daemon Port</Label>

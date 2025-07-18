@@ -1,72 +1,78 @@
-// Define the Prisma Client generator
-generator client {
-  provider = "prisma-client-js"
-}
 
-// Define the database provider
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
 
-// =========================
-// User table
-// =========================
-model User {
-  id        String     @id @default(uuid())
-  email     String     @unique
-  password  String
-  createdAt DateTime   @default(now())
+generator client {
+  provider = "prisma-client-js"
+}
 
-  // Relations
-  servers   Server[]   @relation("OwnerServers")
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  password  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  servers   Server[] @relation("ServerOwner")
   subusers  Subuser[]
 }
 
-// =========================
-// Server table (Minecraft servers)
-// =========================
 model Server {
-  id             String     @id @default(uuid())
+  id             String    @id @default(uuid())
   name           String
-  owner          User       @relation("OwnerServers", fields: [ownerId], references: [id])
+  containerName  String    @unique
+  port           Int
   ownerId        String
-  createdAt      DateTime   @default(now())
-  status         String     @default("Offline") // Online, Offline, Starting
-  ram            Int?
-  type           String?
-  version        String?
-  currentPlayers Int?       @default(0)
-  maxPlayers     Int?       @default(0)
-
+  owner          User      @relation("ServerOwner", fields: [ownerId], references: [id])
+  nodeId         String
+  node           Node      @relation(fields: [nodeId], references: [id])
+  currentPlayers Int?
+  maxPlayers     Int?
+  isOnline       Boolean   @default(false)
   subusers       Subuser[]
 }
 
-// =========================
-// Subuser table (Permissions for other users on a server)
-// =========================
-model Subuser {
-  id          String   @id @default(uuid())
-  server      Server   @relation(fields: [serverId], references: [id])
-  serverId    String
-  user        User     @relation(fields: [userId], references: [id])
-  userId      String
-
-  // Permissions
-  canStart    Boolean  @default(false)
-  canStop     Boolean  @default(false)
-  canConsole  Boolean  @default(false)
+model Node {
+  id           String   @id @default(uuid())
+  uuid         String   @unique
+  tokenId      String   @unique
+  token        String
+  name         String
+  description  String?
+  locationId   String
+  location     Location @relation(fields: [locationId], references: [id])
+  fqdn         String
+  useSSL       Boolean
+  behindProxy  Boolean  @default(false)
+  memory       Int // in MB
+  disk         Int // in MB
+  daemonPort   Int
+  daemonSftpPort Int
+  ports        Json
+  os           String
+  visibility   String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+  servers      Server[]
 }
 
-// =========================
-// Node table (agent setup)
-// =========================
-model Node {
-  id          String   @id @default(cuid())
-  name        String
-  token       String   @unique
-  ipAddress   String
-  port        Int
-  location    Int
-  createdAt   DateTime @default(now())
+model Subuser {
+  id         String  @id @default(uuid())
+  serverId   String
+  server     Server  @relation(fields: [serverId], references: [id])
+  userId     String
+  user       User    @relation(fields: [userId], references: [id])
+  canStart   Boolean @default(false)
+  canStop    Boolean @default(false)
+  canConsole Boolean @default(false)
+}
+
+model Location {
+  id        String   @id @default(uuid())
+  name      String
+  shortCode String   @unique
+  nodes     Node[]
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

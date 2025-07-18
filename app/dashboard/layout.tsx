@@ -23,6 +23,7 @@ import {
   Gamepad2,
   LayoutGrid,
   LogOut,
+  MapPin,
   Server,
   ServerCog,
   Users,
@@ -70,6 +71,17 @@ export default function DashboardLayout({
                 <Link href="/dashboard/panel">
                   <Server />
                   Control Panel
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+             <SidebarMenuItem>
+              <SidebarMenuButton
+                asChild
+                className="font-medium"
+              >
+                <Link href="/dashboard/locations">
+                  <MapPin />
+                  Locations
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
