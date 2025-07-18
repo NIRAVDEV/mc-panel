@@ -20,7 +20,7 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
     const { toast } = useToast();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
-    const [error, setError] = useState<string | null>(null);
+    const [error, setError] = useState<any>(null);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -57,7 +57,7 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
                         <Alert variant="destructive" className="my-4">
                             <Terminal className="h-4 w-4" />
                             <AlertTitle>Error</AlertTitle>
-                            <AlertDescription>{JSON.stringify(error)}</AlertDescription>
+                            <AlertDescription>{typeof error === 'string' ? error : JSON.stringify(error)}</AlertDescription>
                         </Alert>
                     )}
 

@@ -26,6 +26,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/api/nodes/route.js"
+    ],
+    "/dashboard/nodes/new/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/dashboard/nodes/new/page.js"
     ]
   }
 }
