@@ -4,12 +4,10 @@
 import { useState, useTransition } from "react";
 import Link from "next/link";
 import { Button } from "../../components/ui/button";
-import { Dialog, DialogContent } from "../../components/ui/dialog";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table";
 import { PlusCircle, Trash2, HardDrive, Cpu, CircleDot } from "lucide-react";
 import { useToast } from "../../app/hooks/use-toast";
 import type { Node } from "../../lib/types";
-import { NodeForm } from "./node-form";
 import { Badge } from "../ui/badge";
 import { Skeleton } from "../ui/skeleton";
 import { Alert, AlertDescription, AlertTitle } from "../ui/alert";
@@ -24,15 +22,8 @@ interface NodeManagementProps {
 }
 
 export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagementProps) {
-  const [isFormOpen, setFormOpen] = useState(false);
-  const [selectedNode, setSelectedNode] = useState<Node | undefined>(undefined);
   const [isPending, startTransition] = useTransition();
   const { toast } = useToast();
-
-  const handleOpenForm = (node?: Node) => {
-      setSelectedNode(node);
-      setFormOpen(true);
-  }
 
   const handleDelete = (nodeId: string) => {
       startTransition(async () => {
@@ -61,17 +52,13 @@ export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagem
   return (
     <>
       <div className="flex justify-end mb-4">
-        <Button onClick={() => handleOpenForm()}>
-            <PlusCircle className="mr-2 h-4 w-4"/>
-            Add Node
+        <Button asChild>
+            <Link href="/dashboard/nodes/new">
+                <PlusCircle className="mr-2 h-4 w-4"/>
+                Add Node
+            </Link>
         </Button>
       </div>
-
-      <Dialog open={isFormOpen} onOpenChange={setFormOpen}>
-        <DialogContent className="sm:max-w-3xl">
-          <NodeForm node={selectedNode} closeDialog={() => { setFormOpen(false); refetch(); }} />
-        </DialogContent>
-      </Dialog>
 
       <div className="rounded-md border">
         <Table>
@@ -152,4 +139,3 @@ export function NodeManagement({ nodes, isLoading, error, refetch }: NodeManagem
     </>
   );
 }
-
