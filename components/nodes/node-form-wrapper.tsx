@@ -16,39 +16,12 @@ import Link from "next/link";
 import type { Node } from "../../lib/types";
 import { Textarea } from "../ui/textarea";
 
-type Location = {
-    id: string;
-    name: string;
-    shortCode: string;
-}
 
 export function NodeFormWrapper({ node }: { node?: Node }) {
     const { toast } = useToast();
     const router = useRouter();
     const [isPending, startTransition] = useTransition();
     const [error, setError] = useState<any>(null);
-    const [locations, setLocations] = useState<Location[]>([]);
-    const [loadingLocations, setLoadingLocations] = useState(true);
-
-    useEffect(() => {
-        const fetchLocations = async () => {
-            try {
-                const res = await fetch("/api/locations");
-                if (!res.ok) throw new Error("Failed to fetch locations");
-                const data = await res.json();
-                setLocations(data);
-            } catch (err) {
-                toast({
-                    title: "Error",
-                    description: "Could not fetch locations.",
-                    variant: "destructive"
-                });
-            } finally {
-                setLoadingLocations(false);
-            }
-        };
-        fetchLocations();
-    }, [toast]);
 
     const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -103,23 +76,8 @@ export function NodeFormWrapper({ node }: { node?: Node }) {
                             <Textarea id="description" name="description" rows={5} />
                         </div>
                         <div className="space-y-2">
-                            <Label htmlFor="locationId">Location</Label>
-                            <Select name="locationId" defaultValue={node?.location}>
-                                <SelectTrigger disabled={loadingLocations}>
-                                    <SelectValue placeholder="Select a location" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {loadingLocations ? (
-                                        <SelectItem value="loading" disabled>Loading locations...</SelectItem>
-                                    ) : locations.length > 0 ? (
-                                        locations.map(loc => (
-                                            <SelectItem key={loc.id} value={loc.id}>{loc.name}</SelectItem>
-                                        ))
-                                    ) : (
-                                        <SelectItem value="no-locations" disabled>No locations found. Add one on the Locations page.</SelectItem>
-                                    )}
-                                </SelectContent>
-                            </Select>
+                            <Label htmlFor="location">Location</Label>
+                            <Input id="location" name="location" placeholder="e.g., Frankfurt" required />
                         </div>
                          <div className="space-y-2">
                             <Label>Node Visibility</Label>

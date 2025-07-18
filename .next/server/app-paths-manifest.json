@@ -1,6 +1,11 @@
 {
   "/api/nodes/route": "app/api/nodes/route.js",
+  "/api/locations/route": "app/api/locations/route.js",
+  "/_not-found/page": "app/_not-found/page.js",
   "/page": "app/page.js",
-  "/dashboard/nodes/page": "app/dashboard/nodes/page.js",
-  "/dashboard/nodes/new/page": "app/dashboard/nodes/new/page.js"
+  "/dashboard/nodes/new/page": "app/dashboard/nodes/new/page.js",
+  "/dashboard/locations/page": "app/dashboard/locations/page.js",
+  "/dashboard/panel/page": "app/dashboard/panel/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/dashboard/nodes/page": "app/dashboard/nodes/page.js"
 }

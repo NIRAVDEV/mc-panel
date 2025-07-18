@@ -1,12 +1,13 @@
 
 
+
 import prisma from "../../../lib/prisma";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 
 const nodeSchema = z.object({
   name: z.string().min(1, { message: "Name is required" }),
-  locationId: z.string().min(1, { message: "Location is required" }),
+  location: z.string().min(1, { message: "Location is required" }),
   fqdn: z.string().min(1, { message: "FQDN is required" }),
   os: z.enum(["debian", "nixos"]),
   visibility: z.enum(["Public", "Private"]),
@@ -45,12 +46,25 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: validation.error.flatten().fieldErrors }, { status: 400 });
     }
 
-    const { name, locationId, fqdn, daemonPort, daemonSftpPort, useSSL, behindProxy, memory, disk, portsStart, portsEnd, os, visibility } = validation.data;
+    const { name, location: locationName, fqdn, daemonPort, daemonSftpPort, useSSL, behindProxy, memory, disk, portsStart, portsEnd, os, visibility } = validation.data;
+
+    // Find or create the location
+    let location = await prisma.location.findFirst({
+        where: { name: { equals: locationName, mode: 'insensitive' } }
+    });
+
+    if (!location) {
+        // A simple way to generate a short code. Consider a more robust method for production.
+        const shortCode = locationName.substring(0, 3).toUpperCase() + Math.floor(Math.random() * 10);
+        location = await prisma.location.create({
+            data: { name: locationName, shortCode }
+        });
+    }
 
     const node = await prisma.node.create({
       data: {
         name,
-        locationId,
+        locationId: location.id,
         fqdn,
         daemonPort,
         daemonSftpPort,
