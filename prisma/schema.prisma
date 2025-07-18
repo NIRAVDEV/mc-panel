@@ -1,0 +1,72 @@
+// Define the Prisma Client generator
+generator client {
+  provider = "prisma-client-js"
+}
+
+// Define the database provider
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// =========================
+// User table
+// =========================
+model User {
+  id        String     @id @default(uuid())
+  email     String     @unique
+  password  String
+  createdAt DateTime   @default(now())
+
+  // Relations
+  servers   Server[]   @relation("OwnerServers")
+  subusers  Subuser[]
+}
+
+// =========================
+// Server table (Minecraft servers)
+// =========================
+model Server {
+  id             String     @id @default(uuid())
+  name           String
+  owner          User       @relation("OwnerServers", fields: [ownerId], references: [id])
+  ownerId        String
+  createdAt      DateTime   @default(now())
+  status         String     @default("Offline") // Online, Offline, Starting
+  ram            Int?
+  type           String?
+  version        String?
+  currentPlayers Int?       @default(0)
+  maxPlayers     Int?       @default(0)
+
+  subusers       Subuser[]
+}
+
+// =========================
+// Subuser table (Permissions for other users on a server)
+// =========================
+model Subuser {
+  id          String   @id @default(uuid())
+  server      Server   @relation(fields: [serverId], references: [id])
+  serverId    String
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+
+  // Permissions
+  canStart    Boolean  @default(false)
+  canStop     Boolean  @default(false)
+  canConsole  Boolean  @default(false)
+}
+
+// =========================
+// Node table (agent setup)
+// =========================
+model Node {
+  id          String   @id @default(cuid())
+  name        String
+  token       String   @unique
+  ipAddress   String
+  port        Int
+  location    Int
+  createdAt   DateTime @default(now())
+}

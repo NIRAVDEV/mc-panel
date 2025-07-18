@@ -1,5 +1,25 @@
-# Firebase Studio
+# MC Panel
 
-This is a NextJS starter in Firebase Studio.
+A modern Minecraft control panel built with **Next.js**, **TailwindCSS**, **Prisma**, and **Docker**.
 
-To get started, take a look at src/app/page.tsx.
+## 📦 Getting Started
+
+```bash
+npm install
+npx prisma init
+npm run dev
+```
+
+## 🧱 Structure
+
+- \`/app\`: Next.js App Router
+- \`/lib\`: Docker & utilities
+- \`/prisma\`: DB schema
+- \`/components\`: Reusable UI
+
+## 📌 TODO
+
+- [ ] Auth
+- [ ] Server creation
+- [ ] Docker control
+- [ ] File manager
