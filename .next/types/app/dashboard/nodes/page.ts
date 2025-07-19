@@ -1,4 +1,4 @@
-// File: /home/user/studio/app/dashboard/nodes/page.tsx
+// File: /workspaces/mc-panel/app/dashboard/nodes/page.tsx
 import * as entry from '../../../../../app/dashboard/nodes/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

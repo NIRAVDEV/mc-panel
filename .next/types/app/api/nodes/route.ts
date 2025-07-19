@@ -1,4 +1,4 @@
-// File: /home/user/studio/app/api/nodes/route.tsx
+// File: /workspaces/mc-panel/app/api/nodes/route.tsx
 import * as entry from '../../../../../app/api/nodes/route.js'
 import type { NextRequest } from 'next/server.js'
 

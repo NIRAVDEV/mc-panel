@@ -1,11 +1,13 @@
 'use client';
-
 import { useEffect, useState } from "react";
 import { Card, CardDescription, CardHeader, CardTitle } from "../../../components/ui/card";
 import { NodeManagement } from "../../../components/nodes/node-management";
+import { Node } from "../../../lib/types";
+
+
 
 export default function NodesPage() {
-  const [nodes, setNodes] = useState([]);
+  const [nodes, setNodes] = useState<Node[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -14,7 +16,7 @@ export default function NodesPage() {
         const res = await fetch("/api/nodes", { cache: "no-store" });
         if (!res.ok) throw new Error("Failed to fetch nodes");
         const data = await res.json();
-        setNodes(data || []);
+        setNodes(data.nodes || []); // ✅ CORRECT
       } catch (err) {
         console.error("Error loading nodes:", err);
         setNodes([]);
@@ -22,7 +24,6 @@ export default function NodesPage() {
         setLoading(false);
       }
     };
-
     fetchNodes();
   }, []);
 
@@ -36,13 +37,16 @@ export default function NodesPage() {
           </CardDescription>
         </CardHeader>
 
-        {/* Conditionally show NodeManagement or loading */}
         {loading ? (
           <div className="p-4">Loading nodes...</div>
         ) : (
-          <NodeManagement initialNodes={[]} refetch={function (): Promise<void> {
-              throw new Error("Function not implemented.");
-            } }/>
+          <NodeManagement
+            initialNodes={nodes}
+            refetch={async () => {
+              // You can later implement a real refetch here
+              console.log("Refetch called!");
+            }}
+          />
         )}
       </Card>
     </div>

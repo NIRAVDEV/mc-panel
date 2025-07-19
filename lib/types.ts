@@ -26,7 +26,13 @@ export type Server = {
 export type Node = {
   id: string;
   name: string;
-  location: string;
+  location: {
+    id: string;
+    name: string;
+    shortcode: string;
+    createdAt: Date;
+    updatedAt: Date;
+  }
   fqdn: string;
   daemonPort: number;
   useSSL: boolean;

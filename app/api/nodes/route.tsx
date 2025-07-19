@@ -1,37 +1,12 @@
-import prisma from "../../../lib/prisma";
 import { NextResponse } from "next/server";
+import prisma from "../../../lib/prisma"; // Adjust path as needed
 
-// GET /api/nodes - Fetch all nodes
-export async function GET() {
-  const nodes = await prisma.node.findMany({
-    orderBy: { createdAt: "desc" },
-  });
-  return NextResponse.json(nodes);
-}
-
-// POST /api/nodes - Add a new node
 export async function POST(req: Request) {
-  const body = await req.json();
-  const {
-    name,
-    fqdn,
-    location,
-    visibility,
-    description,
-    useSSL,
-    behindProxy,
-    memory,
-    disk,
-    daemonPort,
-    daemonSftpPort,
-    ports,
-  } = body;
-
-  const node = await prisma.node.create({
-    data: {
+  try {
+    const {
       name,
       fqdn,
-      location,
+      location, // e.g. "INDIA"
       visibility,
       description,
       useSSL,
@@ -41,9 +16,55 @@ export async function POST(req: Request) {
       daemonPort,
       daemonSftpPort,
       ports,
-      token: crypto.randomUUID(),
-    },
-  });
+    } = await req.json();
 
-  return NextResponse.json(node);
+    const shortCode = location.toLowerCase().replace(/\s+/g, "-");
+
+    const node = await prisma.node.create({
+      data: {
+        name,
+        fqdn,
+        visibility,
+        description,
+        useSSL,
+        behindProxy,
+        memory,
+        disk,
+        daemonPort,
+        daemonSftpPort,
+        ports,
+        token: crypto.randomUUID(),
+        location: {
+          connectOrCreate: {
+            where: { shortCode },
+            create: {
+              name: location,
+              shortCode,
+            },
+          },
+        },
+      },
+    });
+
+    return NextResponse.json(node, { status: 201 });
+
+  } catch (error) {
+    console.error("POST /api/nodes error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
+}
+
+export async function GET() {
+  try {
+    const nodes = await prisma.node.findMany({
+      include: {
+        location: true,
+      },
+    });
+
+    return NextResponse.json({ nodes });
+  } catch (error) {
+    console.error("GET /api/nodes error:", error);
+    return NextResponse.json({ error: "Internal server error" }, { status: 500 });
+  }
 }

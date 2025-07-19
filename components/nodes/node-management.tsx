@@ -87,7 +87,7 @@ export function NodeManagement({ initialNodes, refetch }: NodeManagementProps) {
                         <Link href={`/dashboard/nodes/${node.id}`} className="font-medium hover:underline">{node.name}</Link>
                         <div className="text-muted-foreground text-xs">{node.fqdn}</div>
                     </TableCell>
-                    <TableCell>{node.location}</TableCell>
+                    <TableCell>{node.location?.name || "Unknown"}</TableCell>
                     <TableCell className="flex items-center gap-2">
                         <Cpu className="h-4 w-4 text-muted-foreground" />
                         <span>{node.memory} GB</span>
